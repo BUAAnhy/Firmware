@@ -284,6 +284,7 @@ MulticopterAttitudeControl::vehicle_status_poll()
 			} else {
 				_rates_sp_id = ORB_ID(vehicle_rates_setpoint);
 				_actuators_id = ORB_ID(actuator_controls_0);
+				_actuators1_id = ORB_ID(actuator_controls_1);
 			}
 		}
 	}
@@ -748,31 +749,51 @@ MulticopterAttitudeControl::run()
 			if (_v_control_mode.flag_control_rates_enabled) {
 				control_attitude_rates(dt);
 
+				// Control Group 1 ---------------------------------------------------------------------------
 				/* publish actuator controls */
-				_actuators.control[0] = (PX4_ISFINITE(_att_control(0))) ? _att_control(0) : 0.0f;
-				_actuators.control[1] = (PX4_ISFINITE(_att_control(1))) ? _att_control(1) : 0.0f;
-				_actuators.control[2] = (PX4_ISFINITE(_att_control(2))) ? _att_control(2) : 0.0f;
-				_actuators.control[3] = (PX4_ISFINITE(_thrust_sp)) ? _thrust_sp : 0.0f;
+				_actuators.control[0] = (PX4_ISFINITE(_att_control(0))) ? _att_control(0) : 0.0f; //直升机 滚转
+				_actuators.control[1] = (PX4_ISFINITE(_att_control(1))) ? _att_control(1) : 0.0f; //直升机 俯仰
+				_actuators.control[2] = (PX4_ISFINITE(_att_control(2))) ? _att_control(2) : 0.0f; //直升机 偏航
+				_actuators.control[3] = (PX4_ISFINITE(_thrust_sp)) ? _thrust_sp : 0.0f;           //旋翼总距
+				_actuators.control[4] = 0.0f;                                                     //左右襟翼
+				_actuators.control[5] = 0.0f;                                                     //左旋翼倾转
+				_actuators.control[6] = 0.0f;                                                     //右旋翼倾转
 				_actuators.control[7] = _v_att_sp.landing_gear;
 				_actuators.timestamp = hrt_absolute_time();
 				_actuators.timestamp_sample = _sensor_gyro.timestamp;
-
 				/* scale effort by battery status */
 				if (_bat_scale_en.get() && _battery_status.scale > 0.0f) {
 					for (int i = 0; i < 4; i++) {
 						_actuators.control[i] *= _battery_status.scale;
 					}
 				}
-
 				if (!_actuators_0_circuit_breaker_enabled) {
 					if (_actuators_0_pub != nullptr) {
-
 						orb_publish(_actuators_id, _actuators_0_pub, &_actuators);
-
 					} else if (_actuators_id) {
 						_actuators_0_pub = orb_advertise(_actuators_id, &_actuators);
 					}
-
+				}
+				// Control Group 2 ---------------------------------------------------------------------------
+				/* publish actuator controls */
+				_actuators1.control[0] = 0.0f; //固定翼 滚转 
+				_actuators1.control[1] = 0.0f; //固定翼 俯仰
+				_actuators1.control[2] = 0.0f; //固定翼 偏航
+				_actuators1.control[3] = 0.0f; //旋翼转速
+				_actuators1.timestamp = hrt_absolute_time();
+				_actuators1.timestamp_sample = _sensor_gyro.timestamp;
+				/* scale effort by battery status */
+				if (_bat_scale_en.get() && _battery_status.scale > 0.0f) {
+					for (int i = 0; i < 4; i++) {
+						_actuators1.control[i] *= _battery_status.scale;
+					}
+				}
+				if (!_actuators_0_circuit_breaker_enabled) {
+					if (_actuators_1_pub != nullptr) {
+						orb_publish(_actuators1_id, _actuators_1_pub, &_actuators1);
+					} else if (_actuators1_id) {
+						_actuators_1_pub = orb_advertise(_actuators1_id, &_actuators1);
+					}
 				}
 
 				/* publish controller status */
@@ -797,21 +818,37 @@ MulticopterAttitudeControl::run()
 					_thrust_sp = 0.0f;
 					_att_control.zero();
 
+					// Control Group 1 ---------------------------------------------------------------------------
 					/* publish actuator controls */
 					_actuators.control[0] = 0.0f;
 					_actuators.control[1] = 0.0f;
 					_actuators.control[2] = 0.0f;
 					_actuators.control[3] = 0.0f;
+					_actuators.control[4] = 0.0f;
+					_actuators.control[5] = 0.0f;
+					_actuators.control[6] = 0.0f;
+					_actuators.control[7] = 0.0f; 
 					_actuators.timestamp = hrt_absolute_time();
 					_actuators.timestamp_sample = _sensor_gyro.timestamp;
-
 					if (!_actuators_0_circuit_breaker_enabled) {
 						if (_actuators_0_pub != nullptr) {
-
 							orb_publish(_actuators_id, _actuators_0_pub, &_actuators);
-
 						} else if (_actuators_id) {
 							_actuators_0_pub = orb_advertise(_actuators_id, &_actuators);
+						}
+					}
+					// Control Group 2 ---------------------------------------------------------------------------
+					_actuators1.control[0] = 0.0f;
+					_actuators1.control[1] = 0.0f;
+					_actuators1.control[2] = 0.0f;
+					_actuators1.control[3] = 0.0f;
+					_actuators1.timestamp = hrt_absolute_time();
+					_actuators1.timestamp_sample = _sensor_gyro.timestamp;
+					if (!_actuators_0_circuit_breaker_enabled) {
+						if (_actuators_1_pub != nullptr) {
+							orb_publish(_actuators1_id, _actuators_1_pub, &_actuators1);
+						} else if (_actuators1_id) {
+							_actuators_1_pub = orb_advertise(_actuators1_id, &_actuators1);
 						}
 					}
 				}
