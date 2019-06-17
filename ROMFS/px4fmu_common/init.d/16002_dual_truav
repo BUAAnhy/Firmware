@@ -1,0 +1,87 @@
+#!nsh
+#
+# @name Dual-TRUAV
+#
+# @type Helicopter
+# @class Copter
+#
+# @maintainer liuzhong@sia.cn
+#
+
+sh /etc/init.d/rc.mc_defaults
+set MAV_TYPE 4
+
+set MIXER dual_trauv
+set PWM_OUT 1234567
+set PWM_RATE 400
+set PWM_DISARMED 900
+set PWM_MIN 1075
+set PWM_MAX 1950
+
+set MIXER_AUX dual_trauv
+set PWM_AUX_OUT 123456
+set PWM_AUX_RATE 400
+set PWM_AUX_DISARMED 900
+set PWM_MIN 1075
+set PWM_MAX 1950
+
+if [ $AUTOCNF == yes ]
+then
+	param set MC_ACRO_P_MAX		 270
+	param set MC_ACRO_R_MAX		 540
+	param set MC_ACRO_Y_MAX		 120
+
+	param set MC_PITCHRATE_D	 0.003
+	param set MC_PITCHRATE_FF	 0
+	param set MC_PITCHRATE_I	 0.025
+	param set MC_PITCHRATE_P	 0.13
+	param set MC_PITCH_P	         9
+
+	param set MC_ROLLRATE_D	         0.002
+	param set MC_ROLLRATE_FF	 0
+	param set MC_ROLLRATE_I	         0.02
+	param set MC_ROLLRATE_P	         0.07
+	param set MC_ROLL_P	         6.8
+
+	param set MC_YAWRATE_D	         0
+	param set MC_YAWRATE_FF	         0
+	param set MC_YAWRATE_I	         0.2
+	param set MC_YAWRATE_MAX	 120
+	param set MC_YAWRATE_P	         0.25
+	param set MC_YAW_FF	         0.5
+	param set MC_YAW_P	         2.8
+
+	param set MPC_LAND_SPEED	 1
+	param set MPC_THR_MAX	         1
+	param set MPC_THR_MIN	         0.06
+	param set MPC_TILTMAX_AIR	 45
+	param set MPC_TILTMAX_LND	 15
+	param set MPC_MANTHR_MIN         0.06
+
+	param set MPC_X_FF	         0.5
+	param set MPC_X_I	         0
+	param set MPC_X_P	         0.6
+	param set MPC_X_VEL_D	         0
+	param set MPC_X_VEL_I	         0.02
+	param set MPC_X_VEL_MAX	         5
+	param set MPC_X_VEL_P	         0.08
+
+	param set MPC_Y_FF	         0.5
+	param set MPC_Y_I	         0
+	param set MPC_Y_P	         0.6
+	param set MPC_Y_VEL_D	         0
+	param set MPC_Y_VEL_I	         0.02
+	param set MPC_Y_VEL_MAX	         5
+	param set MPC_Y_VEL_P	         0.08
+
+	param set MPC_Z_FF	         0.5
+	param set MPC_Z_I	         0
+	param set MPC_Z_P	         1
+	param set MPC_Z_VEL_D	         0
+	param set MPC_Z_VEL_I	         0.03
+	param set MPC_Z_VEL_MAX	         3
+	param set MPC_Z_VEL_P	         0.08
+
+	param set ATT_BIAS_MAX           0.0
+	param set CBRK_IO_SAFETY         0
+fi
