@@ -237,7 +237,15 @@ private:
 		(ParamFloat<px4::params::SENS_BOARD_Y_OFF>) _board_offset_y,
 		(ParamFloat<px4::params::SENS_BOARD_Z_OFF>) _board_offset_z,
 
-		(ParamFloat<px4::params::VT_WV_YAWR_SCL>) _vtol_wv_yaw_rate_scale		/**< Scale value [0, 1] for yaw rate setpoint  */
+		(ParamFloat<px4::params::VT_WV_YAWR_SCL>) _vtol_wv_yaw_rate_scale,		/**< Scale value [0, 1] for yaw rate setpoint  */
+	
+		// For V22 -----------------------------------------------------------------------------
+		(ParamFloat<px4::params::V22_TILT_L_HEL>) _v22_tilt_l_hel,
+		(ParamFloat<px4::params::V22_TILT_L_FIX>) _v22_tilt_l_fix,
+		(ParamFloat<px4::params::V22_TILT_R_HEL>) _v22_tilt_r_hel,
+		(ParamFloat<px4::params::V22_TILT_R_FIX>) _v22_tilt_r_fix,
+		(ParamFloat<px4::params::V22_ROTOR_V_HEL>) _v22_rotor_v_hel,
+		(ParamFloat<px4::params::V22_ROTOR_T_HEL>) _v22_rotor_t_hel
 	)
 
 	matrix::Vector3f _attitude_p;		/**< P gain for attitude control */
@@ -251,5 +259,14 @@ private:
 	matrix::Vector3f _auto_rate_max;	/**< attitude rate limits in auto modes */
 	matrix::Vector3f _acro_rate_max;	/**< max attitude rates in acro mode */
 
+	// For V22 -----------------------------------------------------------------------------
+	float _v22_tilt_l_hel_value;
+	float _v22_tilt_l_fix_value;
+	float _v22_tilt_r_hel_value;
+	float _v22_tilt_r_fix_value;
+	float _v22_rotor_v_hel_value;
+	float _v22_rotor_t_hel_value;
+
+	uint64_t _start_rotor_speed;
 };
 

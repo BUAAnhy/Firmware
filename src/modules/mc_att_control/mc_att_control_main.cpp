@@ -131,6 +131,7 @@ MulticopterAttitudeControl::MulticopterAttitudeControl() :
 	}
 
 	parameters_updated();
+	_start_rotor_speed = hrt_absolute_time();
 }
 
 void
@@ -197,6 +198,14 @@ MulticopterAttitudeControl::parameters_updated()
 			M_DEG_TO_RAD_F * _board_offset_y.get(),
 			M_DEG_TO_RAD_F * _board_offset_z.get()));
 	_board_rotation = board_rotation_offset * _board_rotation;
+
+	// For V22 -----------------------------------------------------------------------------
+	_v22_tilt_l_hel_value = _v22_tilt_l_hel.get();
+	_v22_tilt_l_fix_value = _v22_tilt_l_fix.get();
+	_v22_tilt_r_hel_value = _v22_tilt_r_hel.get();
+	_v22_tilt_r_fix_value = _v22_tilt_r_fix.get();
+	_v22_rotor_v_hel_value = _v22_rotor_v_hel.get();
+	_v22_rotor_t_hel_value = _v22_rotor_t_hel.get();
 }
 
 void
@@ -755,9 +764,9 @@ MulticopterAttitudeControl::run()
 				_actuators.control[1] = (PX4_ISFINITE(_att_control(1))) ? _att_control(1) : 0.0f; //直升机 俯仰
 				_actuators.control[2] = (PX4_ISFINITE(_att_control(2))) ? _att_control(2) : 0.0f; //直升机 偏航
 				_actuators.control[3] = (PX4_ISFINITE(_thrust_sp)) ? _thrust_sp : 0.0f;           //旋翼总距
-				_actuators.control[4] = 0.0f;                                                     //左右襟翼
-				_actuators.control[5] = 0.0f;                                                     //左旋翼倾转
-				_actuators.control[6] = 0.0f;                                                     //右旋翼倾转
+				_actuators.control[4] = _manual_control_sp.flaps;                                 //左右襟翼，RC直接控
+				_actuators.control[5] = _v22_tilt_l_hel_value;                                    //左旋翼倾转
+				_actuators.control[6] = _v22_tilt_r_hel_value;                                    //右旋翼倾转
 				_actuators.control[7] = _v_att_sp.landing_gear;
 				_actuators.timestamp = hrt_absolute_time();
 				_actuators.timestamp_sample = _sensor_gyro.timestamp;
@@ -779,7 +788,18 @@ MulticopterAttitudeControl::run()
 				_actuators1.control[0] = 0.0f; //固定翼 滚转 
 				_actuators1.control[1] = 0.0f; //固定翼 俯仰
 				_actuators1.control[2] = 0.0f; //固定翼 偏航
-				_actuators1.control[3] = 0.0f; //旋翼转速
+				//旋翼转速，RC控制，缓慢启动
+				if(_manual_control_sp.aux1 > 0.0f){ //以“辅助通道1”为参考，螺旋桨是否定速
+					float dt_rotor_speed = (hrt_absolute_time() - _start_rotor_speed) / 1000000.0f;
+					if(dt_rotor_speed <= _v22_rotor_t_hel_value){
+						_actuators1.control[3] = _v22_rotor_v_hel_value * dt_rotor_speed / _v22_rotor_t_hel_value;
+					}else{
+						_actuators1.control[3] = _v22_rotor_v_hel_value;
+					}
+				}else{
+					_start_rotor_speed = hrt_absolute_time();
+					_actuators1.control[3] = 0.0f;
+				}
 				_actuators1.timestamp = hrt_absolute_time();
 				_actuators1.timestamp_sample = _sensor_gyro.timestamp;
 				/* scale effort by battery status */

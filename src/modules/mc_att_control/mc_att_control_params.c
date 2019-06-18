@@ -590,3 +590,71 @@ PARAM_DEFINE_FLOAT(MC_DTERM_CUTOFF, 30.f);
  */
 PARAM_DEFINE_INT32(MC_AIRMODE, 0);
 
+/***************************************************************************************/
+// For V22 -----------------------------------------------------------------------------
+
+/**
+ * Position of tilt servo 1 in helicopter mode (left)
+ *
+ * @min 0.0
+ * @max 1.0
+ * @increment 0.01
+ * @decimal 3
+ * @group Multicopter Attitude Control
+ */
+PARAM_DEFINE_FLOAT(V22_TILT_L_HEL, 0.0f);
+
+/**
+ * Position of tilt servo 1 in fixed-wing mode (left)
+ *
+ * @min 0.0
+ * @max 1.0
+ * @increment 0.01
+ * @decimal 3
+ * @group Multicopter Attitude Control
+ */
+PARAM_DEFINE_FLOAT(V22_TILT_L_FIX, 1.0f);
+
+/**
+ * Position of tilt servo 2 in helicopter mode (right)
+ *
+ * @min 0.0
+ * @max 1.0
+ * @increment 0.01
+ * @decimal 3
+ * @group Multicopter Attitude Control
+ */
+PARAM_DEFINE_FLOAT(V22_TILT_R_HEL, 0.0f);
+
+/**
+ * Position of tilt servo 2 in fixed-wing mode (right)
+ *
+ * @min 0.0
+ * @max 1.0
+ * @increment 0.01
+ * @decimal 3
+ * @group Multicopter Attitude Control
+ */
+PARAM_DEFINE_FLOAT(V22_TILT_R_FIX, 1.0f);
+
+/**
+ * Rotor speed in helicopter mode
+ *
+ * @min 0.0
+ * @max 1.0
+ * @increment 0.01
+ * @decimal 3
+ * @group Multicopter Attitude Control
+ */
+PARAM_DEFINE_FLOAT(V22_ROTOR_V_HEL, 0.7f);
+
+/**
+ * Time for rotor speed reaching V22_ROTOR_V_HEL (second)
+ *
+ * @min 1.0
+ * @max 10.0
+ * @increment 0.1
+ * @decimal 1
+ * @group Multicopter Attitude Control
+ */
+PARAM_DEFINE_FLOAT(V22_ROTOR_T_HEL, 3.0f);
