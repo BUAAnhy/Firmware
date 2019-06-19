@@ -596,19 +596,19 @@ PARAM_DEFINE_INT32(MC_AIRMODE, 0);
 /**
  * Position of tilt servo 1 in helicopter mode (left)
  *
- * @min 0.0
- * @max 1.0
+ * @min -1.0
+ * @max  1.0
  * @increment 0.01
  * @decimal 3
  * @group Multicopter Attitude Control
  */
-PARAM_DEFINE_FLOAT(V22_TILT_L_HEL, 0.0f);
+PARAM_DEFINE_FLOAT(V22_TILT_L_HEL, -1.0f);
 
 /**
  * Position of tilt servo 1 in fixed-wing mode (left)
  *
- * @min 0.0
- * @max 1.0
+ * @min -1.0
+ * @max  1.0
  * @increment 0.01
  * @decimal 3
  * @group Multicopter Attitude Control
@@ -618,19 +618,19 @@ PARAM_DEFINE_FLOAT(V22_TILT_L_FIX, 1.0f);
 /**
  * Position of tilt servo 2 in helicopter mode (right)
  *
- * @min 0.0
- * @max 1.0
+ * @min -1.0
+ * @max  1.0
  * @increment 0.01
  * @decimal 3
  * @group Multicopter Attitude Control
  */
-PARAM_DEFINE_FLOAT(V22_TILT_R_HEL, 0.0f);
+PARAM_DEFINE_FLOAT(V22_TILT_R_HEL, -1.0f);
 
 /**
  * Position of tilt servo 2 in fixed-wing mode (right)
  *
- * @min 0.0
- * @max 1.0
+ * @min -1.0
+ * @max  1.0
  * @increment 0.01
  * @decimal 3
  * @group Multicopter Attitude Control

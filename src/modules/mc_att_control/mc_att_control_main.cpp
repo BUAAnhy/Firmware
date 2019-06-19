@@ -761,8 +761,10 @@ MulticopterAttitudeControl::run()
 				// Control Group 1 ---------------------------------------------------------------------------
 				/* publish actuator controls */
 				_actuators.control[0] = (PX4_ISFINITE(_att_control(0))) ? _att_control(0) : 0.0f; //直升机 滚转
-				_actuators.control[1] = (PX4_ISFINITE(_att_control(1))) ? _att_control(1) : 0.0f; //直升机 俯仰
-				_actuators.control[2] = (PX4_ISFINITE(_att_control(2))) ? _att_control(2) : 0.0f; //直升机 偏航
+				_att_control(1) = (PX4_ISFINITE(_att_control(1))) ? _att_control(1) : 0.0f;
+				_att_control(2) = (PX4_ISFINITE(_att_control(2))) ? _att_control(2) : 0.0f;
+				_actuators.control[1] = _att_control(1) - _att_control(2);                        //直升机 俯仰-偏航
+				_actuators.control[2] = _att_control(1) + _att_control(2);                        //直升机 俯仰+偏航
 				_actuators.control[3] = (PX4_ISFINITE(_thrust_sp)) ? _thrust_sp : 0.0f;           //旋翼总距
 				_actuators.control[4] = _manual_control_sp.flaps;                                 //左右襟翼，RC直接控
 				_actuators.control[5] = _v22_tilt_l_hel_value;                                    //左旋翼倾转
