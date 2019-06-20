@@ -649,8 +649,9 @@ PARAM_DEFINE_FLOAT(V22_TILT_R_FIX, 1.0f);
 PARAM_DEFINE_FLOAT(V22_ROTOR_V_HEL, 0.7f);
 
 /**
- * Time for rotor speed reaching V22_ROTOR_V_HEL (second)
+ * Time for rotor speed reaching V22_ROTOR_V_HEL
  *
+ * @unit second
  * @min 1.0
  * @max 10.0
  * @increment 0.1
@@ -658,3 +659,14 @@ PARAM_DEFINE_FLOAT(V22_ROTOR_V_HEL, 0.7f);
  * @group Multicopter Attitude Control
  */
 PARAM_DEFINE_FLOAT(V22_ROTOR_T_HEL, 3.0f);
+
+/**
+ * Scale factor for flaps
+ *
+ * @min 0.0
+ * @max 1.0
+ * @increment 0.01
+ * @decimal 2
+ * @group Multicopter Attitude Control
+ */
+PARAM_DEFINE_FLOAT(V22_FLAPS_SCL, 0.8f);

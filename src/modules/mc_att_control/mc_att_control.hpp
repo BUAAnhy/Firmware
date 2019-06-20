@@ -245,7 +245,8 @@ private:
 		(ParamFloat<px4::params::V22_TILT_R_HEL>) _v22_tilt_r_hel,
 		(ParamFloat<px4::params::V22_TILT_R_FIX>) _v22_tilt_r_fix,
 		(ParamFloat<px4::params::V22_ROTOR_V_HEL>) _v22_rotor_v_hel,
-		(ParamFloat<px4::params::V22_ROTOR_T_HEL>) _v22_rotor_t_hel
+		(ParamFloat<px4::params::V22_ROTOR_T_HEL>) _v22_rotor_t_hel,
+		(ParamFloat<px4::params::V22_FLAPS_SCL>) _v22_flaps_scl
 	)
 
 	matrix::Vector3f _attitude_p;		/**< P gain for attitude control */
@@ -266,6 +267,7 @@ private:
 	float _v22_tilt_r_fix_value;
 	float _v22_rotor_v_hel_value;
 	float _v22_rotor_t_hel_value;
+	float _flaps_scale_value;
 
 	uint64_t _start_rotor_speed;
 };
