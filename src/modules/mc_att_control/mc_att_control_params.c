@@ -669,4 +669,4 @@ PARAM_DEFINE_FLOAT(V22_ROTOR_T_HEL, 3.0f);
  * @decimal 2
  * @group Multicopter Attitude Control
  */
-PARAM_DEFINE_FLOAT(V22_FLAPS_SCL, 0.8f);
+PARAM_DEFINE_FLOAT(V22_FLAPS_SCL, 1.0f);
