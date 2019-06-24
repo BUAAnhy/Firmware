@@ -791,23 +791,24 @@ MulticopterAttitudeControl::run()
 				_actuators1.control[0] = 0.0f; //固定翼 滚转 
 				_actuators1.control[1] = 0.0f; //固定翼 俯仰
 				_actuators1.control[2] = 0.0f; //固定翼 偏航
+				_actuators1.control[3] = 0.0f; //不使用
 				//旋翼转速，RC控制，缓慢启动
-				if(_manual_control_sp.aux1 > 0.0f){ //以“辅助通道1”为参考，螺旋桨是否定速
+				if(_v_control_mode.flag_armed && _manual_control_sp.aux1 > 0.0f){ //以“辅助通道1”为参考，螺旋桨是否定速
 					float dt_rotor_speed = (hrt_absolute_time() - _start_rotor_speed) / 1000000.0f;
 					if(dt_rotor_speed <= _v22_rotor_t_hel_value){
-						_actuators1.control[3] = _v22_rotor_v_hel_value * dt_rotor_speed / _v22_rotor_t_hel_value;
+						_actuators1.control[4] = _v22_rotor_v_hel_value * dt_rotor_speed / _v22_rotor_t_hel_value * 2.0f - 1.0f;
 					}else{
-						_actuators1.control[3] = _v22_rotor_v_hel_value;
+						_actuators1.control[4] = _v22_rotor_v_hel_value * 2.0f -1.0f;
 					}
 				}else{
 					_start_rotor_speed = hrt_absolute_time();
-					_actuators1.control[3] = 0.0f;
+					_actuators1.control[4] = -1.0f;
 				}
 				_actuators1.timestamp = hrt_absolute_time();
 				_actuators1.timestamp_sample = _sensor_gyro.timestamp;
 				/* scale effort by battery status */
 				if (_bat_scale_en.get() && _battery_status.scale > 0.0f) {
-					for (int i = 0; i < 4; i++) {
+					for (int i = 0; i < 5; i++) {
 						_actuators1.control[i] *= _battery_status.scale;
 					}
 				}
@@ -865,6 +866,7 @@ MulticopterAttitudeControl::run()
 					_actuators1.control[1] = 0.0f;
 					_actuators1.control[2] = 0.0f;
 					_actuators1.control[3] = 0.0f;
+					_actuators1.control[4] = 0.0f;
 					_actuators1.timestamp = hrt_absolute_time();
 					_actuators1.timestamp_sample = _sensor_gyro.timestamp;
 					if (!_actuators_0_circuit_breaker_enabled) {

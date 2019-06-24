@@ -646,7 +646,7 @@ PARAM_DEFINE_FLOAT(V22_TILT_R_FIX, 1.0f);
  * @decimal 3
  * @group Multicopter Attitude Control
  */
-PARAM_DEFINE_FLOAT(V22_ROTOR_V_HEL, 0.7f);
+PARAM_DEFINE_FLOAT(V22_ROTOR_V_HEL, 0.2f);
 
 /**
  * Time for rotor speed reaching V22_ROTOR_V_HEL
