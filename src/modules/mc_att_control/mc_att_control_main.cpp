@@ -804,6 +804,8 @@ MulticopterAttitudeControl::run()
 					_start_rotor_speed = hrt_absolute_time();
 					_actuators1.control[4] = -1.0f;
 				}
+				// _actuators1.control[4] = ((PX4_ISFINITE(_manual_control_sp.aux1)) && 
+				//                           (_v_control_mode.flag_armed)) ? _manual_control_sp.aux1 :-1.0f;
 				_actuators1.timestamp = hrt_absolute_time();
 				_actuators1.timestamp_sample = _sensor_gyro.timestamp;
 				/* scale effort by battery status */
