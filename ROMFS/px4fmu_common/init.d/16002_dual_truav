@@ -15,15 +15,13 @@ set MIXER dual_truav
 set PWM_OUT 12345678
 set PWM_RATE 300
 set PWM_DISARMED 1500
-set PWM_MIN 1000
-set PWM_MAX 2000
+set PWM_MIN 500
+set PWM_MAX 2150
 
 set MIXER_AUX dual_truav
 set PWM_AUX_OUT 123456
 set PWM_AUX_RATE 120
 set PWM_AUX_DISARMED 900
-set PWM_MIN 1000
-set PWM_MAX 2000
 
 if [ $AUTOCNF == yes ]
 then
