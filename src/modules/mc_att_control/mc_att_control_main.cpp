@@ -118,9 +118,9 @@ MulticopterAttitudeControl::MulticopterAttitudeControl() :
 	_rates_prev.zero();
 	_rates_prev_filtered.zero();
 	_rates_sp.zero();
-	_rates_int.zero();
+	_rates_int.zero();  _rates_int_fw.zero();
 	_thrust_sp = 0.0f;
-	_att_control.zero();
+	_att_control.zero();  _att_control_fw.zero();
 
 	/* initialize thermal corrections as we might not immediately get a topic update (only non-zero values) */
 	for (unsigned i = 0; i < 3; i++) {
@@ -204,9 +204,25 @@ MulticopterAttitudeControl::parameters_updated()
 	_v22_tilt_l_fix_value = _v22_tilt_l_fix.get();
 	_v22_tilt_r_hel_value = _v22_tilt_r_hel.get();
 	_v22_tilt_r_fix_value = _v22_tilt_r_fix.get();
-	_v22_rotor_v_hel_value = _v22_rotor_v_hel.get();
-	_v22_rotor_t_hel_value = _v22_rotor_t_hel.get();
 	_flaps_scale_value = _v22_flaps_scl.get();
+	// --------------------------------------------------------------------------------------
+	_fw_rate_p(0) = _fw_rollrate_p.get();
+	_fw_rate_i(0) = _fw_rollrate_i.get();
+	_fw_rate_d(0) = _fw_rollrate_d.get();
+	_fw_rate_int_lim(0) = _fw_rr_int_lim.get();
+	_fw_rate_ff(0) = _fw_rollrate_ff.get();
+
+	_fw_rate_p(1) = _fw_pitchrate_p.get();
+	_fw_rate_i(1) = _fw_pitchrate_i.get();
+	_fw_rate_d(1) = _fw_pitchrate_d.get();
+	_fw_rate_int_lim(1) = _fw_pr_int_lim.get();
+	_fw_rate_ff(1) = _fw_pitchrate_ff.get();
+
+	_fw_rate_p(2) = _fw_yawrate_p.get();
+	_fw_rate_i(2) = _fw_yawrate_i.get();
+	_fw_rate_d(2) = _fw_yawrate_d.get();
+	_fw_rate_int_lim(2) = _fw_yr_int_lim.get();
+	_fw_rate_ff(2) = _fw_yawrate_ff.get();
 }
 
 void
@@ -460,7 +476,7 @@ MulticopterAttitudeControl::control_attitude(float dt)
 			_rates_sp(2) = math::constrain(_rates_sp(2), -wv_yaw_rate_max, wv_yaw_rate_max);
 
 			// prevent integrator winding up in weathervane mode
-			_rates_int(2) = 0.0f;
+			_rates_int(2) = 0.0f;  _rates_int_fw(2) = 0.0f;
 		}
 	}
 }
@@ -496,7 +512,7 @@ MulticopterAttitudeControl::control_attitude_rates(float dt)
 {
 	/* reset integral if disarmed */
 	if (!_v_control_mode.flag_armed || !_vehicle_status.is_rotary_wing) {
-		_rates_int.zero();
+		_rates_int.zero();  _rates_int_fw.zero();
 	}
 
 	// get the raw gyro data and correct for thermal errors
@@ -535,6 +551,10 @@ MulticopterAttitudeControl::control_attitude_rates(float dt)
 	Vector3f rates_i_scaled = _rate_i.emult(pid_attenuations(_tpa_breakpoint_i.get(), _tpa_rate_i.get()));
 	Vector3f rates_d_scaled = _rate_d.emult(pid_attenuations(_tpa_breakpoint_d.get(), _tpa_rate_d.get()));
 
+	Vector3f fw_rates_p_scaled = _fw_rate_p.emult(pid_attenuations(_tpa_breakpoint_p.get(), _tpa_rate_p.get()));
+	Vector3f fw_rates_i_scaled = _fw_rate_i.emult(pid_attenuations(_tpa_breakpoint_i.get(), _tpa_rate_i.get()));
+	Vector3f fw_rates_d_scaled = _fw_rate_d.emult(pid_attenuations(_tpa_breakpoint_d.get(), _tpa_rate_d.get()));
+
 	/* angular rates error */
 	Vector3f rates_err = _rates_sp - rates;
 
@@ -545,9 +565,14 @@ MulticopterAttitudeControl::control_attitude_rates(float dt)
 		_lp_filters_d[2].apply(rates(2)));
 
 	_att_control = rates_p_scaled.emult(rates_err) +
-		       _rates_int -
-		       rates_d_scaled.emult(rates_filtered - _rates_prev_filtered) / dt +
-		       _rate_ff.emult(_rates_sp);
+		           _rates_int -
+		           rates_d_scaled.emult(rates_filtered - _rates_prev_filtered) / dt +
+		           _rate_ff.emult(_rates_sp);
+	
+	_att_control_fw = fw_rates_p_scaled.emult(rates_err) +
+		              _rates_int_fw -
+		              fw_rates_d_scaled.emult(rates_filtered - _rates_prev_filtered) / dt +
+		              _fw_rate_ff.emult(_rates_sp);
 
 	_rates_prev = rates;
 	_rates_prev_filtered = rates_filtered;
@@ -581,10 +606,12 @@ MulticopterAttitudeControl::control_attitude_rates(float dt)
 
 			// Perform the integration using a first order method and do not propagate the result if out of range or invalid
 			float rate_i = _rates_int(i) + rates_i_scaled(i) * rates_err(i) * dt;
-
 			if (PX4_ISFINITE(rate_i) && rate_i > -_rate_int_lim(i) && rate_i < _rate_int_lim(i)) {
 				_rates_int(i) = rate_i;
-
+			}
+			rate_i = _rates_int_fw(i) + fw_rates_i_scaled(i) * rates_err(i) * dt;
+			if (PX4_ISFINITE(rate_i) && rate_i > -_fw_rate_int_lim(i) && rate_i < _fw_rate_int_lim(i)) {
+				_rates_int_fw(i) = rate_i;
 			}
 		}
 	}
@@ -592,7 +619,7 @@ MulticopterAttitudeControl::control_attitude_rates(float dt)
 	/* explicitly limit the integrator state */
 	for (int i = AXIS_INDEX_ROLL; i < AXIS_COUNT; i++) {
 		_rates_int(i) = math::constrain(_rates_int(i), -_rate_int_lim(i), _rate_int_lim(i));
-
+		_rates_int_fw(i) = math::constrain(_rates_int_fw(i), -_fw_rate_int_lim(i), _fw_rate_int_lim(i));
 	}
 }
 
@@ -759,6 +786,11 @@ MulticopterAttitudeControl::run()
 			if (_v_control_mode.flag_control_rates_enabled) {
 				control_attitude_rates(dt);
 
+				/********************************************************************************************/
+				// Gain scheduling strategy for the transition procedure
+				
+				/********************************************************************************************/
+
 				// Control Group 1 ---------------------------------------------------------------------------
 				/* publish actuator controls */
 				_actuators.control[0] = (PX4_ISFINITE(_att_control(0))) ? _att_control(0) : 0.0f;      //直升机 滚转
@@ -788,22 +820,10 @@ MulticopterAttitudeControl::run()
 				}
 				// Control Group 2 ---------------------------------------------------------------------------
 				/* publish actuator controls */
-				_actuators1.control[0] = 0.0f; //固定翼 滚转 
-				_actuators1.control[1] = 0.0f; //固定翼 俯仰
-				_actuators1.control[2] = 0.0f; //固定翼 偏航
+				_actuators1.control[0] = (PX4_ISFINITE(_att_control_fw(0))) ? _att_control(0) : 0.0f; //固定翼 滚转 
+				_actuators1.control[1] = (PX4_ISFINITE(_att_control_fw(1))) ? _att_control(1) : 0.0f; //固定翼 俯仰
+				_actuators1.control[2] = (PX4_ISFINITE(_att_control_fw(2))) ? _att_control(2) : 0.0f; //固定翼 偏航
 				_actuators1.control[3] = 0.0f; //不使用
-				//旋翼转速，RC控制，缓慢启动
-				/* if(_v_control_mode.flag_armed && _manual_control_sp.aux1 > 0.0f){ //以“辅助通道1”为参考，螺旋桨是否定速
-					float dt_rotor_speed = (hrt_absolute_time() - _start_rotor_speed) / 1000000.0f;
-					if(dt_rotor_speed <= _v22_rotor_t_hel_value){
-						_actuators1.control[4] = _v22_rotor_v_hel_value * dt_rotor_speed / _v22_rotor_t_hel_value * 2.0f - 1.0f;
-					}else{
-						_actuators1.control[4] = _v22_rotor_v_hel_value * 2.0f -1.0f;
-					}
-				}else{
-					_start_rotor_speed = hrt_absolute_time();
-					_actuators1.control[4] = -1.0f;
-				} */
 				_actuators1.control[4] = ((PX4_ISFINITE(_manual_control_sp.aux1)) && 
 				                          (_v_control_mode.flag_armed)) ? _manual_control_sp.aux1 :-1.0f;
 				_actuators1.timestamp = hrt_absolute_time();
@@ -840,9 +860,9 @@ MulticopterAttitudeControl::run()
 				if (!_vehicle_status.is_vtol) {
 
 					_rates_sp.zero();
-					_rates_int.zero();
+					_rates_int.zero();  _rates_int_fw.zero();
 					_thrust_sp = 0.0f;
-					_att_control.zero();
+					_att_control.zero();  _att_control_fw.zero();
 
 					// Control Group 1 ---------------------------------------------------------------------------
 					/* publish actuator controls */

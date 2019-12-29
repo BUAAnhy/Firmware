@@ -638,29 +638,6 @@ PARAM_DEFINE_FLOAT(V22_TILT_R_HEL, -1.0f);
 PARAM_DEFINE_FLOAT(V22_TILT_R_FIX, 1.0f);
 
 /**
- * Rotor speed in helicopter mode
- *
- * @min 0.0
- * @max 1.0
- * @increment 0.01
- * @decimal 3
- * @group Multicopter Attitude Control
- */
-PARAM_DEFINE_FLOAT(V22_ROTOR_V_HEL, 0.2f);
-
-/**
- * Time for rotor speed reaching V22_ROTOR_V_HEL
- *
- * @unit second
- * @min 1.0
- * @max 10.0
- * @increment 0.1
- * @decimal 1
- * @group Multicopter Attitude Control
- */
-PARAM_DEFINE_FLOAT(V22_ROTOR_T_HEL, 3.0f);
-
-/**
  * Scale factor for flaps
  *
  * @min 0.0
@@ -670,3 +647,167 @@ PARAM_DEFINE_FLOAT(V22_ROTOR_T_HEL, 3.0f);
  * @group Multicopter Attitude Control
  */
 PARAM_DEFINE_FLOAT(V22_FLAPS_SCL, 1.0f);
+
+// For V22 FW attitude control ---------------------------------------------------------
+
+/**
+ * Roll rate P gain (V22 FW)
+ *
+ * @min 0.005
+ * @max 1.0
+ * @decimal 3
+ * @increment 0.005
+ * @group Multicopter Attitude Control
+ */
+PARAM_DEFINE_FLOAT(FW_ROLLRATE_P, 0.05f);
+
+/**
+ * Roll rate I gain (V22 FW)
+ *
+ * @min 0.0
+ * @max 0.2
+ * @decimal 3
+ * @increment 0.005
+ * @group Multicopter Attitude Control
+ */
+PARAM_DEFINE_FLOAT(FW_ROLLRATE_I, 0.01f);
+
+/**
+ * Roll rate integrator limit (V22 FW)
+ *
+ * @min 0.0
+ * @max 1.0
+ * @decimal 2
+ * @increment 0.01
+ * @group Multicopter Attitude Control
+ */
+PARAM_DEFINE_FLOAT(FW_RR_INT_LIM, 0.2f);
+
+/**
+ * Roll rate D gain (V22 FW)
+ *
+ * @min 0.0
+ * @decimal 4
+ * @increment 0.0005
+ * @group Multicopter Attitude Control
+ */
+PARAM_DEFINE_FLOAT(FW_ROLLRATE_D, 0.0f);
+
+/**
+ * Roll rate feedforward (V22 FW)
+ *
+ * @min 0.0
+ * @decimal 4
+ * @group Multicopter Attitude Control
+ */
+PARAM_DEFINE_FLOAT(FW_ROLLRATE_FF, 0.0f);
+
+// -------------------------------------------------------------------------------------
+
+/**
+ * Pitch rate P gain (V22 FW)
+ *
+ * @min 0.005
+ * @max 1.0
+ * @decimal 3
+ * @increment 0.005
+ * @group Multicopter Attitude Control
+ */
+PARAM_DEFINE_FLOAT(FW_PITCHRATE_P, 0.08f);
+
+/**
+ * Pitch rate I gain (V22 FW)
+ *
+ * @min 0.0
+ * @max 0.5
+ * @decimal 3
+ * @increment 0.005
+ * @group Multicopter Attitude Control
+ */
+PARAM_DEFINE_FLOAT(FW_PITCHRATE_I, 0.02f);
+
+/**
+ * Pitch rate integrator limit (V22 FW)
+ *
+ * @min 0.0
+ * @max 1.0
+ * @decimal 2
+ * @increment 0.01
+ * @group Multicopter Attitude Control
+ */
+PARAM_DEFINE_FLOAT(FW_PR_INT_LIM, 0.4f);
+
+/**
+ * Pitch rate D gain (V22 FW)
+ *
+ * @min 0.0
+ * @decimal 4
+ * @increment 0.0005
+ * @group Multicopter Attitude Control
+ */
+PARAM_DEFINE_FLOAT(FW_PITCHRATE_D, 0.0f);
+
+/**
+ * Pitch rate feedforward (V22 FW)
+ *
+ * @min 0.0
+ * @decimal 4
+ * @group Multicopter Attitude Control
+ */
+PARAM_DEFINE_FLOAT(FW_PITCHRATE_FF, 0.0f);
+
+// -------------------------------------------------------------------------------------
+
+/**
+ * Yaw rate P gain (V22 FW)
+ *
+ * @min 0.005
+ * @max 1.0
+ * @decimal 3
+ * @increment 0.005
+ * @group Multicopter Attitude Control
+ */
+PARAM_DEFINE_FLOAT(FW_YAWRATE_P, 0.05f);
+
+/**
+ * Yaw rate I gain (V22 FW)
+ *
+ * @min 0.0
+ * @max 0.5
+ * @decimal 3
+ * @increment 0.005
+ * @group Multicopter Attitude Control
+ */
+PARAM_DEFINE_FLOAT(FW_YAWRATE_I, 0.01f);
+
+/**
+ * Yaw rate integrator limit (V22 FW)
+ *
+ * @min 0.0
+ * @max 1.0
+ * @decimal 2
+ * @increment 0.01
+ * @group Multicopter Attitude Control
+ */
+PARAM_DEFINE_FLOAT(FW_YR_INT_LIM, 0.2f);
+
+/**
+ * Yaw rate D gain (V22 FW)
+ *
+ * @min 0.0
+ * @decimal 2
+ * @increment 0.01
+ * @group Multicopter Attitude Control
+ */
+PARAM_DEFINE_FLOAT(FW_YAWRATE_D, 0.0f);
+
+/**
+ * Yaw rate feedforward (V22 FW)
+ *
+ * @min 0.0
+ * @decimal 4
+ * @group Multicopter Attitude Control
+ */
+PARAM_DEFINE_FLOAT(FW_YAWRATE_FF, 0.0f);
+
+// -------------------------------------------------------------------------------------

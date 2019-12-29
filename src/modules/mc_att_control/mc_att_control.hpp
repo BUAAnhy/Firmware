@@ -244,9 +244,25 @@ private:
 		(ParamFloat<px4::params::V22_TILT_L_FIX>) _v22_tilt_l_fix,
 		(ParamFloat<px4::params::V22_TILT_R_HEL>) _v22_tilt_r_hel,
 		(ParamFloat<px4::params::V22_TILT_R_FIX>) _v22_tilt_r_fix,
-		(ParamFloat<px4::params::V22_ROTOR_V_HEL>) _v22_rotor_v_hel,
-		(ParamFloat<px4::params::V22_ROTOR_T_HEL>) _v22_rotor_t_hel,
-		(ParamFloat<px4::params::V22_FLAPS_SCL>) _v22_flaps_scl
+		(ParamFloat<px4::params::V22_FLAPS_SCL>) _v22_flaps_scl,
+		// -------------------------------------------------------------------------------------
+		(ParamFloat<px4::params::FW_ROLLRATE_P>) _fw_rollrate_p,
+		(ParamFloat<px4::params::FW_ROLLRATE_I>) _fw_rollrate_i,
+		(ParamFloat<px4::params::FW_ROLLRATE_D>) _fw_rollrate_d,
+		(ParamFloat<px4::params::FW_RR_INT_LIM>) _fw_rr_int_lim,
+		(ParamFloat<px4::params::FW_ROLLRATE_FF>) _fw_rollrate_ff,
+
+		(ParamFloat<px4::params::FW_PITCHRATE_P>) _fw_pitchrate_p,
+		(ParamFloat<px4::params::FW_PITCHRATE_I>) _fw_pitchrate_i,
+		(ParamFloat<px4::params::FW_PITCHRATE_D>) _fw_pitchrate_d,
+		(ParamFloat<px4::params::FW_PR_INT_LIM>) _fw_pr_int_lim,
+		(ParamFloat<px4::params::FW_PITCHRATE_FF>) _fw_pitchrate_ff,
+
+		(ParamFloat<px4::params::FW_YAWRATE_P>) _fw_yawrate_p,
+		(ParamFloat<px4::params::FW_YAWRATE_I>) _fw_yawrate_i,
+		(ParamFloat<px4::params::FW_YAWRATE_D>) _fw_yawrate_d,
+		(ParamFloat<px4::params::FW_YR_INT_LIM>) _fw_yr_int_lim,
+		(ParamFloat<px4::params::FW_YAWRATE_FF>) _fw_yawrate_ff
 	)
 
 	matrix::Vector3f _attitude_p;		/**< P gain for attitude control */
@@ -265,9 +281,15 @@ private:
 	float _v22_tilt_l_fix_value;
 	float _v22_tilt_r_hel_value;
 	float _v22_tilt_r_fix_value;
-	float _v22_rotor_v_hel_value;
-	float _v22_rotor_t_hel_value;
 	float _flaps_scale_value;
+	// -------------------------------------------------------------------------------------
+	matrix::Vector3f _fw_rate_p;
+	matrix::Vector3f _fw_rate_i;
+	matrix::Vector3f _fw_rate_d;
+	matrix::Vector3f _fw_rate_int_lim;
+	matrix::Vector3f _fw_rate_ff;
+	matrix::Vector3f _att_control_fw; //固定翼飞机模式的虚拟控制量
+	matrix::Vector3f _rates_int_fw;
 
 	uint64_t _start_rotor_speed;
 };
