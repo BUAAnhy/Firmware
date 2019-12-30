@@ -282,7 +282,14 @@ private:
 		(ParamFloat<px4::params::FW_YAWRATE_I>) _fw_yawrate_i,
 		(ParamFloat<px4::params::FW_YAWRATE_D>) _fw_yawrate_d,
 		(ParamFloat<px4::params::FW_YR_INT_LIM>) _fw_yr_int_lim,
-		(ParamFloat<px4::params::FW_YAWRATE_FF>) _fw_yawrate_ff
+		(ParamFloat<px4::params::FW_YAWRATE_FF>) _fw_yawrate_ff,
+		// -------------------------------------------------------------------------------------
+		(ParamFloat<px4::params::V22_TILT_MIDDLE>) _v22_tilt_middle,
+		(ParamFloat<px4::params::V22_TILT_END>) _v22_tilt_end,
+		(ParamFloat<px4::params::V22_KEY_SPEED>) _v22_key_speed,
+		(ParamFloat<px4::params::V22_SPEED_MC_M>) _v22_speed_mc_m,
+		(ParamFloat<px4::params::V22_SPEED_M_END>) _v22_speed_m_end,
+		(ParamFloat<px4::params::V22_SPEED_END_MC>) _v22_speed_end_mc
 	)
 
 	matrix::Vector3f _attitude_p;		/**< P gain for attitude control */
@@ -311,7 +318,13 @@ private:
 	matrix::Vector3f _att_control_fw; //固定翼飞机模式的虚拟控制量
 	matrix::Vector3f _rates_int_fw;
 	// -------------------------------------------------------------------------------------
-	// V22 倾转
+	float _v22_tilt_middle_value;
+	float _v22_tilt_end_value;
+	float _v22_key_speed_value;
+	float _v22_speed_mc_m_value;
+	float _v22_speed_m_end_value;
+	float _v22_speed_end_mc_value;
+	// -------------------------------------------------------------------------------------
 	enum vtol_mode {
 		MC_MODE = 0,			/**< vtol is in multicopter mode */
 		TRANSITION_FRONT_P1,	/**< vtol is in front transition part 1 mode */
@@ -321,9 +334,9 @@ private:
 		TRANSITION_BACK_P2      //Part 2
 	};
 	struct {
-		vtol_mode flight_mode;	             /**< vtol flight mode, defined by enum vtol_mode */
-		hrt_abstime transition_angle_change; /**< absoulte time at which angle starts change */
-		float rotor_tilt_angle;
+		vtol_mode flight_mode;	        /**< vtol flight mode, defined by enum vtol_mode */
+		hrt_abstime angle_start_change; /**< absoulte time at which angle starts change */
+		float rotor_tilt_angle;         // 0~90 deg
 	} _vtol_schedule;
 
 	uint64_t _start_rotor_speed;

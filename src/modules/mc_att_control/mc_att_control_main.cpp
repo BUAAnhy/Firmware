@@ -222,6 +222,13 @@ MulticopterAttitudeControl::parameters_updated()
 	_fw_rate_d(2) = _fw_yawrate_d.get();
 	_fw_rate_int_lim(2) = _fw_yr_int_lim.get();
 	_fw_rate_ff(2) = _fw_yawrate_ff.get();
+	// --------------------------------------------------------------------------------------
+	_v22_tilt_middle_value = _v22_tilt_middle.get();
+	_v22_tilt_end_value = _v22_tilt_end.get();
+	_v22_key_speed_value = _v22_key_speed.get();
+	_v22_speed_mc_m_value = _v22_speed_mc_m.get();
+	_v22_speed_m_end_value = _v22_speed_m_end.get();
+	_v22_speed_end_mc_value = _v22_speed_end_mc.get();
 }
 
 void
@@ -697,7 +704,7 @@ MulticopterAttitudeControl::run()
 	/****** 变量初始化 ******/
 	_actuator_armed.armed = false;
 	_vtol_schedule.flight_mode = MC_MODE;
-	_vtol_schedule.transition_angle_change = 0.0f;
+	_vtol_schedule.angle_start_change = 0.0f;
 	_vtol_schedule.rotor_tilt_angle = 0.0f;
 	/*********************/
 
@@ -848,19 +855,137 @@ MulticopterAttitudeControl::run()
 				if(_v_control_mode.flag_control_climb_rate_enabled ||
 				   _v_control_mode.flag_control_velocity_enabled ||
 				   _v_control_mode.flag_control_acceleration_enabled){
-
+					switch(_vtol_schedule.flight_mode){
+						case MC_MODE:
+							_vtol_schedule.angle_start_change = hrt_absolute_time();
+							_vtol_schedule.rotor_tilt_angle = 0.0f;
+							break;
+						case TRANSITION_FRONT_P1:
+							_vtol_schedule.flight_mode = TRANSITION_BACK_P2;
+							_vtol_schedule.angle_start_change = hrt_absolute_time();
+							break;
+						case TRANSITION_FRONT_P2:
+							_vtol_schedule.flight_mode = TRANSITION_BACK_P1;
+							_vtol_schedule.angle_start_change = hrt_absolute_time();
+							break;
+						case FW_MODE:
+							_vtol_schedule.flight_mode = TRANSITION_BACK_P1;
+							_vtol_schedule.angle_start_change = hrt_absolute_time();
+							_vtol_schedule.rotor_tilt_angle = _v22_tilt_end_value;
+							break;
+						case TRANSITION_BACK_P1:
+							_vtol_schedule.rotor_tilt_angle = _vtol_schedule.rotor_tilt_angle -
+								                              (float)hrt_elapsed_time(&_vtol_schedule.angle_start_change) / 1000000.0f * _v22_speed_end_mc_value;
+							_vtol_schedule.angle_start_change = hrt_absolute_time();
+							if (_vtol_schedule.rotor_tilt_angle <= _v22_tilt_middle_value){
+								_vtol_schedule.flight_mode = TRANSITION_BACK_P2;
+								_vtol_schedule.rotor_tilt_angle = _v22_tilt_middle_value;
+							}
+							break;
+						case TRANSITION_BACK_P2:
+							_vtol_schedule.rotor_tilt_angle = _vtol_schedule.rotor_tilt_angle -
+								                              (float)hrt_elapsed_time(&_vtol_schedule.angle_start_change) / 1000000.0f * _v22_speed_end_mc_value;
+							_vtol_schedule.angle_start_change = hrt_absolute_time();
+							if (_vtol_schedule.rotor_tilt_angle <= 0.0f){
+								_vtol_schedule.flight_mode = MC_MODE;
+								_vtol_schedule.rotor_tilt_angle = 0.0f;
+							}
+							break;
+					}
 				}
 				// 2. 姿态、姿态角速度控制时，可进行模式过渡飞行 ----------------------------------------------------
 				else{
 					if(fw_is_request){
-						if(V_lon >= 10.0f){
-							V_lon ++;
+						switch(_vtol_schedule.flight_mode){
+							case MC_MODE:
+								_vtol_schedule.flight_mode = TRANSITION_FRONT_P1;
+								_vtol_schedule.angle_start_change = hrt_absolute_time();
+								_vtol_schedule.rotor_tilt_angle = 0.0f;
+								break;
+							case TRANSITION_FRONT_P1:
+								_vtol_schedule.rotor_tilt_angle = _vtol_schedule.rotor_tilt_angle +
+									                              (float)hrt_elapsed_time(&_vtol_schedule.angle_start_change) / 1000000.0f * _v22_speed_mc_m_value;
+								_vtol_schedule.angle_start_change = hrt_absolute_time();
+								if (_vtol_schedule.rotor_tilt_angle >= _v22_tilt_middle_value){
+									if (V_lon >= _v22_key_speed_value || !_actuator_armed.armed || _vehicle_land_detected.landed)
+										_vtol_schedule.flight_mode = TRANSITION_FRONT_P2;
+									_vtol_schedule.rotor_tilt_angle = _v22_tilt_middle_value;
+								}
+								break;
+							case TRANSITION_FRONT_P2:
+								_vtol_schedule.rotor_tilt_angle = _vtol_schedule.rotor_tilt_angle +
+									                              (float)hrt_elapsed_time(&_vtol_schedule.angle_start_change) / 1000000.0f * _v22_speed_m_end_value;
+								_vtol_schedule.angle_start_change = hrt_absolute_time();
+								if (_vtol_schedule.rotor_tilt_angle >= _v22_tilt_end_value){
+									_vtol_schedule.flight_mode = FW_MODE;
+									_vtol_schedule.rotor_tilt_angle = _v22_tilt_end_value;
+								}
+								break;
+							case FW_MODE:
+								_vtol_schedule.angle_start_change = hrt_absolute_time();
+								_vtol_schedule.rotor_tilt_angle = _v22_tilt_end_value;
+								break;
+							case TRANSITION_BACK_P1:
+								_vtol_schedule.flight_mode = TRANSITION_FRONT_P2;
+								_vtol_schedule.angle_start_change = hrt_absolute_time();
+								break;
+							case TRANSITION_BACK_P2:
+								_vtol_schedule.flight_mode = TRANSITION_FRONT_P1;
+								_vtol_schedule.angle_start_change = hrt_absolute_time();
+								break;
 						}
 					}else if(!fw_is_request){
-
+						switch(_vtol_schedule.flight_mode){
+							case MC_MODE:
+								_vtol_schedule.angle_start_change = hrt_absolute_time();
+								_vtol_schedule.rotor_tilt_angle = 0.0f;
+								break;
+							case TRANSITION_FRONT_P1:
+								_vtol_schedule.flight_mode = TRANSITION_BACK_P2;
+								_vtol_schedule.angle_start_change = hrt_absolute_time();
+								break;
+							case TRANSITION_FRONT_P2:
+								_vtol_schedule.flight_mode = TRANSITION_BACK_P1;
+								_vtol_schedule.angle_start_change = hrt_absolute_time();
+								break;
+							case FW_MODE:
+								_vtol_schedule.flight_mode = TRANSITION_BACK_P1;
+								_vtol_schedule.angle_start_change = hrt_absolute_time();
+								_vtol_schedule.rotor_tilt_angle = _v22_tilt_end_value;
+								break;
+							case TRANSITION_BACK_P1:
+								_vtol_schedule.rotor_tilt_angle = _vtol_schedule.rotor_tilt_angle -
+									                              (float)hrt_elapsed_time(&_vtol_schedule.angle_start_change) / 1000000.0f * _v22_speed_end_mc_value;
+								_vtol_schedule.angle_start_change = hrt_absolute_time();
+								if (_vtol_schedule.rotor_tilt_angle <= _v22_tilt_middle_value){
+									_vtol_schedule.flight_mode = TRANSITION_BACK_P2;
+									_vtol_schedule.rotor_tilt_angle = _v22_tilt_middle_value;
+								}
+								break;
+							case TRANSITION_BACK_P2:
+								_vtol_schedule.rotor_tilt_angle = _vtol_schedule.rotor_tilt_angle -
+									                              (float)hrt_elapsed_time(&_vtol_schedule.angle_start_change) / 1000000.0f * _v22_speed_end_mc_value;
+								_vtol_schedule.angle_start_change = hrt_absolute_time();
+								if (_vtol_schedule.rotor_tilt_angle <= 0.0f){
+									_vtol_schedule.flight_mode = MC_MODE;
+									_vtol_schedule.rotor_tilt_angle = 0.0f;
+								}
+								break;
+						}
 					}
 				}
 				/********************************************************************************************/
+				_v22_transition_status.rotor_tilt_angle = _vtol_schedule.rotor_tilt_angle;
+				_v22_transition_status.GPS_lon_speed = V_lon;
+				_v22_transition_status.rotor_speed = ((PX4_ISFINITE(_manual_control_sp.aux1)) && 
+				                                      (_v_control_mode.flag_armed)) ? _manual_control_sp.aux1 :-1.0f;
+				_v22_transition_status.rotor_col = (PX4_ISFINITE(_thrust_sp)) ? _thrust_sp : 0.0f;
+				_v22_transition_status.rotor_col_d = (PX4_ISFINITE(_att_control(0))) ? _att_control(0) : 0.0f;
+				_v22_transition_status.rotor_lon = (PX4_ISFINITE(_att_control(1))) ? _att_control(1) : 0.0f;
+				_v22_transition_status.rotor_lon_d = (PX4_ISFINITE(_att_control(2))) ? _att_control(2) : 0.0f;
+				_v22_transition_status.aero_ail = (PX4_ISFINITE(_att_control_fw(0))) ? _att_control(0) : 0.0f;
+				_v22_transition_status.aero_ele = (PX4_ISFINITE(_att_control_fw(1))) ? _att_control(1) : 0.0f;
+				_v22_transition_status.aero_rud = (PX4_ISFINITE(_att_control_fw(2))) ? _att_control(2) : 0.0f;
 				if(_v22_transition_status_pub != nullptr){
 					orb_publish(ORB_ID(v22_transition_status), _v22_transition_status_pub, &_v22_transition_status);
 				}else{
@@ -876,10 +1001,12 @@ MulticopterAttitudeControl::run()
 				_actuators.control[2] = _att_control(1) + _att_control(2);                             //直升机 俯仰+偏航
 				_actuators.control[3] = (PX4_ISFINITE(_thrust_sp)) ? _thrust_sp : 0.0f;                //旋翼总距
 				_actuators.control[4] = 0.5f * (_manual_control_sp.flaps + 1.0f) * _flaps_scale_value; //左右襟翼，RC直接控
-				_actuators.control[5] = _v22_tilt_l_hel_value + (_v22_tilt_l_fix_value -
-				                        _v22_tilt_l_hel_value)*_vtol_schedule.rotor_tilt_angle;        //左旋翼倾转
-				_actuators.control[6] = _v22_tilt_r_hel_value + (_v22_tilt_r_fix_value -
-				                        _v22_tilt_r_hel_value)*_vtol_schedule.rotor_tilt_angle;        //右旋翼倾转
+				_actuators.control[5] = _v22_tilt_l_hel_value +
+				                        (_v22_tilt_l_fix_value - _v22_tilt_l_hel_value)*
+										_vtol_schedule.rotor_tilt_angle / _v22_tilt_end_value;         //左旋翼倾转
+				_actuators.control[6] = _v22_tilt_r_hel_value +
+				                        (_v22_tilt_r_fix_value - _v22_tilt_r_hel_value)*
+										_vtol_schedule.rotor_tilt_angle / _v22_tilt_end_value;         //右旋翼倾转
 				_actuators.control[7] = _v_att_sp.landing_gear;
 				_actuators.timestamp = hrt_absolute_time();
 				_actuators.timestamp_sample = _sensor_gyro.timestamp;

@@ -811,3 +811,77 @@ PARAM_DEFINE_FLOAT(FW_YAWRATE_D, 0.0f);
 PARAM_DEFINE_FLOAT(FW_YAWRATE_FF, 0.0f);
 
 // -------------------------------------------------------------------------------------
+
+/**
+ * Position of tilt servo in middle of transition procedure
+ *
+ * @unit deg
+ * @min 0.0
+ * @max 180.0
+ * @increment 0.1
+ * @decimal 1
+ * @group Multicopter Position Control
+ */
+PARAM_DEFINE_FLOAT(V22_TILT_MIDDLE, 30.0f);
+
+/**
+ * Position of tilt servo in end of transition procedure
+ *
+ * @unit deg
+ * @min 0.0
+ * @max 180.0
+ * @increment 0.1
+ * @decimal 1
+ * @group Multicopter Position Control
+ */
+PARAM_DEFINE_FLOAT(V22_TILT_END, 90.0f);
+
+/**
+ * Key speed transition from middle to end
+ *
+ * @unit m/s
+ * @min 0.0
+ * @max 25.0
+ * @increment 0.01
+ * @decimal 2
+ * @group Multicopter Position Control
+ */
+PARAM_DEFINE_FLOAT(V22_KEY_SPEED, 12.0f);
+
+/**
+ * Tilt speed from MC to middle
+ *
+ * @unit deg/s
+ * @min 0.0
+ * @max 360
+ * @increment 0.01
+ * @decimal 2
+ * @group Multicopter Position Control
+ */
+PARAM_DEFINE_FLOAT(V22_SPEED_MC_M, 20.0f);
+
+/**
+ * Tilt speed from middle to end
+ *
+ * @unit deg/s
+ * @min 0.0
+ * @max 360
+ * @increment 0.01
+ * @decimal 2
+ * @group Multicopter Position Control
+ */
+PARAM_DEFINE_FLOAT(V22_SPEED_M_END, 90.0f);
+
+/**
+ * Tilt speed from end to MC
+ *
+ * @unit deg/s
+ * @min 0.0
+ * @max 360
+ * @increment 0.01
+ * @decimal 2
+ * @group Multicopter Position Control
+ */
+PARAM_DEFINE_FLOAT(V22_SPEED_END_MC, 45.0f);
+
+// -------------------------------------------------------------------------------------
