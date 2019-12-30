@@ -402,16 +402,6 @@ MulticopterAttitudeControl::vehicle_local_position_poll()
 }
 
 void
-MulticopterAttitudeControl::actuator_armed_poll()
-{
-	bool updated;
-	orb_check(_actuator_armed_sub, &updated);
-	if (updated) {
-		orb_copy(ORB_ID(actuator_armed), _actuator_armed_sub, &_actuator_armed);
-	}
-}
-
-void
 MulticopterAttitudeControl::vehicle_land_detected_poll()
 {
 	bool updated;
@@ -698,11 +688,10 @@ MulticopterAttitudeControl::run()
 	_sensor_bias_sub = orb_subscribe(ORB_ID(sensor_bias));
 
 	_vehicle_local_position_sub = orb_subscribe(ORB_ID(vehicle_local_position));
-	_actuator_armed_sub = orb_subscribe(ORB_ID(actuator_armed));
 	_vehicle_land_detected_sub = orb_subscribe(ORB_ID(vehicle_land_detected));
 
 	/****** 变量初始化 ******/
-	_actuator_armed.armed = false;
+	_v_control_mode.flag_armed = false;
 	_vtol_schedule.flight_mode = MC_MODE;
 	_vtol_schedule.angle_start_change = 0.0f;
 	_vtol_schedule.rotor_tilt_angle = 0.0f;
@@ -767,7 +756,6 @@ MulticopterAttitudeControl::run()
 			sensor_correction_poll();
 			sensor_bias_poll();
 			vehicle_local_position_poll();
-			actuator_armed_poll();
 			vehicle_land_detected_poll();
 
 			/* Check if we are in rattitude mode and the pilot is above the threshold on pitch
@@ -907,7 +895,7 @@ MulticopterAttitudeControl::run()
 									                              (float)hrt_elapsed_time(&_vtol_schedule.angle_start_change) / 1000000.0f * _v22_speed_mc_m_value;
 								_vtol_schedule.angle_start_change = hrt_absolute_time();
 								if (_vtol_schedule.rotor_tilt_angle >= _v22_tilt_middle_value){
-									if (V_lon >= _v22_key_speed_value || !_actuator_armed.armed || _vehicle_land_detected.landed)
+									if (V_lon >= _v22_key_speed_value || !_v_control_mode.flag_armed || _vehicle_land_detected.landed)
 										_vtol_schedule.flight_mode = TRANSITION_FRONT_P2;
 									_vtol_schedule.rotor_tilt_angle = _v22_tilt_middle_value;
 								}
@@ -975,10 +963,51 @@ MulticopterAttitudeControl::run()
 					}
 				}
 				/********************************************************************************************/
+				// 积分分离 & 增益调度
+				switch(_vtol_schedule.flight_mode){
+					case MC_MODE:
+						_rates_int_fw.zero();
+						_att_control_fw(0) = 0.0f;
+						_att_control_fw(1) = 0.0f;
+						_att_control_fw(2) = 0.0f;
+						break;
+					case TRANSITION_FRONT_P1:
+						_rates_int_fw.zero();
+						_att_control_fw(0) = 0.0f;
+						_att_control_fw(1) = 0.0f;
+						_att_control_fw(2) = 0.0f;
+						break;
+					case TRANSITION_FRONT_P2:
+						_rates_int.zero();
+						_att_control(0) = 0.0f;
+						_att_control(1) = 0.0f;
+						_att_control(2) = 0.0f;
+						break;
+					case FW_MODE:
+						_rates_int.zero();
+						_att_control(0) = 0.0f;
+						_att_control(1) = 0.0f;
+						_att_control(2) = 0.0f;
+						break;
+					case TRANSITION_BACK_P1:
+						_rates_int.zero();
+						_att_control(0) = 0.0f;
+						_att_control(1) = 0.0f;
+						_att_control(2) = 0.0f;
+						break;
+					case TRANSITION_BACK_P2:
+						if(V_lon <= _v22_key_speed_value){
+							_rates_int_fw.zero();
+							_att_control_fw(0) = 0.0f;
+							_att_control_fw(1) = 0.0f;
+							_att_control_fw(2) = 0.0f;
+						}
+						break;
+				}
 				_v22_transition_status.rotor_tilt_angle = _vtol_schedule.rotor_tilt_angle;
 				_v22_transition_status.GPS_lon_speed = V_lon;
-				_v22_transition_status.rotor_speed = ((PX4_ISFINITE(_manual_control_sp.aux1)) && 
-				                                      (_v_control_mode.flag_armed)) ? _manual_control_sp.aux1 :-1.0f;
+				_v22_transition_status.rotor_speed = (PX4_ISFINITE(_manual_control_sp.aux1) && 
+				                                      _v_control_mode.flag_armed) ? _manual_control_sp.aux1 :-1.0f;
 				_v22_transition_status.rotor_col = (PX4_ISFINITE(_thrust_sp)) ? _thrust_sp : 0.0f;
 				_v22_transition_status.rotor_col_d = (PX4_ISFINITE(_att_control(0))) ? _att_control(0) : 0.0f;
 				_v22_transition_status.rotor_lon = (PX4_ISFINITE(_att_control(1))) ? _att_control(1) : 0.0f;
@@ -1029,8 +1058,8 @@ MulticopterAttitudeControl::run()
 				_actuators1.control[1] = (PX4_ISFINITE(_att_control_fw(1))) ? _att_control(1) : 0.0f; //固定翼 俯仰
 				_actuators1.control[2] = (PX4_ISFINITE(_att_control_fw(2))) ? _att_control(2) : 0.0f; //固定翼 偏航
 				_actuators1.control[3] = 0.0f; //不使用
-				_actuators1.control[4] = ((PX4_ISFINITE(_manual_control_sp.aux1)) && 
-				                          (_v_control_mode.flag_armed)) ? _manual_control_sp.aux1 :-1.0f;
+				_actuators1.control[4] = (PX4_ISFINITE(_manual_control_sp.aux1) && 
+				                          _v_control_mode.flag_armed) ? _manual_control_sp.aux1 :-1.0f;
 				_actuators1.timestamp = hrt_absolute_time();
 				_actuators1.timestamp_sample = _sensor_gyro.timestamp;
 				/* scale effort by battery status */
@@ -1145,7 +1174,6 @@ MulticopterAttitudeControl::run()
 	orb_unsubscribe(_sensor_bias_sub);
 
 	orb_unsubscribe(_vehicle_local_position_sub);
-	orb_unsubscribe(_actuator_armed_sub);
 	orb_unsubscribe(_vehicle_land_detected_sub);
 }
 
