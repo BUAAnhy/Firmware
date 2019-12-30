@@ -1,0 +1,10 @@
+float32 rotor_tilt_angle
+float32 GPS_lon_speed
+float32 rotor_speed
+float32 rotor_col
+float32 rotor_col_d
+float32 rotor_lon
+float32 rotor_lon_d
+float32 aero_ail
+float32 aero_ele
+float32 aero_rud

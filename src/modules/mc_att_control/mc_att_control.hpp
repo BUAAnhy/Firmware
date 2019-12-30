@@ -56,6 +56,8 @@
 #include <uORB/topics/vehicle_rates_setpoint.h>
 #include <uORB/topics/vehicle_status.h>
 
+#include <uORB/topics/v22_transition_status.h>
+
 /**
  * Multicopter attitude control app start / stop handling function
  */
@@ -144,6 +146,7 @@ private:
 	orb_advert_t	_actuators_0_pub{nullptr};		/**< attitude actuator controls publication */
 	orb_advert_t	_actuators_1_pub{nullptr};
 	orb_advert_t	_controller_status_pub{nullptr};	/**< controller status publication */
+	orb_advert_t    _v22_transition_status_pub{nullptr};
 
 	orb_id_t _rates_sp_id{nullptr};		/**< pointer to correct rates setpoint uORB metadata structure */
 	orb_id_t _actuators_id{nullptr};	/**< pointer to correct actuator controls0 uORB metadata structure */
@@ -163,6 +166,7 @@ private:
 	struct sensor_gyro_s			_sensor_gyro {};	/**< gyro data before thermal correctons and ekf bias estimates are applied */
 	struct sensor_correction_s		_sensor_correction {};	/**< sensor thermal corrections */
 	struct sensor_bias_s			_sensor_bias {};	/**< sensor in-run bias corrections */
+	struct v22_transition_status_s  _v22_transition_status {};
 
 	MultirotorMixer::saturation_status _saturation_status{};
 

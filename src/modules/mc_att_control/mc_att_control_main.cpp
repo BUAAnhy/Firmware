@@ -790,6 +790,11 @@ MulticopterAttitudeControl::run()
 				// Gain scheduling strategy for the transition procedure
 				
 				/********************************************************************************************/
+				if(_v22_transition_status_pub != nullptr){
+					orb_publish(ORB_ID(v22_transition_status), _v22_transition_status_pub, &_v22_transition_status);
+				}else{
+					_v22_transition_status_pub = orb_advertise(ORB_ID(v22_transition_status), &_v22_transition_status);
+				}
 
 				// Control Group 1 ---------------------------------------------------------------------------
 				/* publish actuator controls */
