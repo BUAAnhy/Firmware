@@ -46,7 +46,6 @@
 #include "mc_att_control.hpp"
 
 #include <conversion/rotation.h>
-#include <drivers/drv_hrt.h>
 #include <lib/ecl/geo/geo.h>
 #include <circuit_breaker/circuit_breaker.h>
 #include <mathlib/math/Limits.hpp>
@@ -385,6 +384,36 @@ MulticopterAttitudeControl::sensor_bias_poll()
 
 }
 
+void
+MulticopterAttitudeControl::vehicle_local_position_poll()
+{
+	bool updated;
+	orb_check(_vehicle_local_position_sub, &updated);
+	if (updated) {
+		orb_copy(ORB_ID(vehicle_local_position), _vehicle_local_position_sub, &_vehicle_local_position);
+	}
+}
+
+void
+MulticopterAttitudeControl::actuator_armed_poll()
+{
+	bool updated;
+	orb_check(_actuator_armed_sub, &updated);
+	if (updated) {
+		orb_copy(ORB_ID(actuator_armed), _actuator_armed_sub, &_actuator_armed);
+	}
+}
+
+void
+MulticopterAttitudeControl::vehicle_land_detected_poll()
+{
+	bool updated;
+	orb_check(_vehicle_land_detected_sub, &updated);
+	if (updated) {
+		orb_copy(ORB_ID(vehicle_land_detected), _vehicle_land_detected_sub, &_vehicle_land_detected);
+	}
+}
+
 /**
  * Attitude controller.
  * Input: 'vehicle_attitude_setpoint' topics (depending on mode)
@@ -661,6 +690,17 @@ MulticopterAttitudeControl::run()
 
 	_sensor_bias_sub = orb_subscribe(ORB_ID(sensor_bias));
 
+	_vehicle_local_position_sub = orb_subscribe(ORB_ID(vehicle_local_position));
+	_actuator_armed_sub = orb_subscribe(ORB_ID(actuator_armed));
+	_vehicle_land_detected_sub = orb_subscribe(ORB_ID(vehicle_land_detected));
+
+	/****** 变量初始化 ******/
+	_actuator_armed.armed = false;
+	_vtol_schedule.flight_mode = MC_MODE;
+	_vtol_schedule.transition_angle_change = 0.0f;
+	_vtol_schedule.rotor_tilt_angle = 0.0f;
+	/*********************/
+
 	/* wakeup source: gyro data from sensor selected by the sensor app */
 	px4_pollfd_struct_t poll_fds = {};
 	poll_fds.events = POLLIN;
@@ -719,6 +759,9 @@ MulticopterAttitudeControl::run()
 			vehicle_attitude_poll();
 			sensor_correction_poll();
 			sensor_bias_poll();
+			vehicle_local_position_poll();
+			actuator_armed_poll();
+			vehicle_land_detected_poll();
 
 			/* Check if we are in rattitude mode and the pilot is above the threshold on pitch
 			 * or roll (yaw can rotate 360 in normal att control).  If both are true don't
@@ -788,7 +831,35 @@ MulticopterAttitudeControl::run()
 
 				/********************************************************************************************/
 				// Gain scheduling strategy for the transition procedure
-				
+				// 计算航向角
+				matrix::Dcmf _R = matrix::Quatf(_v_att.q);
+				float _yaw = matrix::Eulerf(_R).psi();
+				// 计算纵向速度
+				float V_lon = 0.0f;
+				float vxvy_yaw = cosf(_yaw) * _vehicle_local_position.vx +sinf(_yaw) * _vehicle_local_position.vy;
+				V_lon = sqrtf(vxvy_yaw * vxvy_yaw + _vehicle_local_position.vz * _vehicle_local_position.vz);
+				// 模式过渡开关
+				bool fw_is_request;
+				if(_manual_control_sp.transition_switch == manual_control_setpoint_s::SWITCH_POS_ON)
+					fw_is_request = true;
+				else
+					fw_is_request = false;
+				// 1. 定高、定点时，暂定在直升机模式下 ------------------------------------------------------------
+				if(_v_control_mode.flag_control_climb_rate_enabled ||
+				   _v_control_mode.flag_control_velocity_enabled ||
+				   _v_control_mode.flag_control_acceleration_enabled){
+
+				}
+				// 2. 姿态、姿态角速度控制时，可进行模式过渡飞行 ----------------------------------------------------
+				else{
+					if(fw_is_request){
+						if(V_lon >= 10.0f){
+							V_lon ++;
+						}
+					}else if(!fw_is_request){
+
+					}
+				}
 				/********************************************************************************************/
 				if(_v22_transition_status_pub != nullptr){
 					orb_publish(ORB_ID(v22_transition_status), _v22_transition_status_pub, &_v22_transition_status);
@@ -805,8 +876,10 @@ MulticopterAttitudeControl::run()
 				_actuators.control[2] = _att_control(1) + _att_control(2);                             //直升机 俯仰+偏航
 				_actuators.control[3] = (PX4_ISFINITE(_thrust_sp)) ? _thrust_sp : 0.0f;                //旋翼总距
 				_actuators.control[4] = 0.5f * (_manual_control_sp.flaps + 1.0f) * _flaps_scale_value; //左右襟翼，RC直接控
-				_actuators.control[5] = _v22_tilt_l_hel_value;                                         //左旋翼倾转
-				_actuators.control[6] = _v22_tilt_r_hel_value;                                         //右旋翼倾转
+				_actuators.control[5] = _v22_tilt_l_hel_value + (_v22_tilt_l_fix_value -
+				                        _v22_tilt_l_hel_value)*_vtol_schedule.rotor_tilt_angle;        //左旋翼倾转
+				_actuators.control[6] = _v22_tilt_r_hel_value + (_v22_tilt_r_fix_value -
+				                        _v22_tilt_r_hel_value)*_vtol_schedule.rotor_tilt_angle;        //右旋翼倾转
 				_actuators.control[7] = _v_att_sp.landing_gear;
 				_actuators.timestamp = hrt_absolute_time();
 				_actuators.timestamp_sample = _sensor_gyro.timestamp;
@@ -943,6 +1016,10 @@ MulticopterAttitudeControl::run()
 
 	orb_unsubscribe(_sensor_correction_sub);
 	orb_unsubscribe(_sensor_bias_sub);
+
+	orb_unsubscribe(_vehicle_local_position_sub);
+	orb_unsubscribe(_actuator_armed_sub);
+	orb_unsubscribe(_vehicle_land_detected_sub);
 }
 
 int MulticopterAttitudeControl::task_spawn(int argc, char *argv[])

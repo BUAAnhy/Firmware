@@ -56,6 +56,10 @@
 #include <uORB/topics/vehicle_rates_setpoint.h>
 #include <uORB/topics/vehicle_status.h>
 
+#include <drivers/drv_hrt.h>
+#include <uORB/topics/vehicle_local_position.h>
+#include <uORB/topics/actuator_armed.h>
+#include <uORB/topics/vehicle_land_detected.h>
 #include <uORB/topics/v22_transition_status.h>
 
 /**
@@ -110,6 +114,10 @@ private:
 	void		vehicle_rates_setpoint_poll();
 	void		vehicle_status_poll();
 
+	void        vehicle_local_position_poll();
+	void        actuator_armed_poll();
+	void        vehicle_land_detected_poll();
+
 	/**
 	 * Attitude controller.
 	 */
@@ -139,6 +147,10 @@ private:
 	int		_sensor_correction_sub{-1};	/**< sensor thermal correction subscription */
 	int		_sensor_bias_sub{-1};		/**< sensor in-run bias correction subscription */
 
+	int     _vehicle_local_position_sub{-1};
+	int     _actuator_armed_sub{-1};
+	int     _vehicle_land_detected_sub{-1};
+
 	unsigned _gyro_count{1};
 	int _selected_gyro{0};
 
@@ -166,7 +178,11 @@ private:
 	struct sensor_gyro_s			_sensor_gyro {};	/**< gyro data before thermal correctons and ekf bias estimates are applied */
 	struct sensor_correction_s		_sensor_correction {};	/**< sensor thermal corrections */
 	struct sensor_bias_s			_sensor_bias {};	/**< sensor in-run bias corrections */
-	struct v22_transition_status_s  _v22_transition_status {};
+
+	struct vehicle_local_position_s _vehicle_local_position {}; //需要订阅
+	struct actuator_armed_s         _actuator_armed {};
+	struct vehicle_land_detected_s  _vehicle_land_detected {};
+	struct v22_transition_status_s  _v22_transition_status {}; //需要发布
 
 	MultirotorMixer::saturation_status _saturation_status{};
 
@@ -294,6 +310,21 @@ private:
 	matrix::Vector3f _fw_rate_ff;
 	matrix::Vector3f _att_control_fw; //固定翼飞机模式的虚拟控制量
 	matrix::Vector3f _rates_int_fw;
+	// -------------------------------------------------------------------------------------
+	// V22 倾转
+	enum vtol_mode {
+		MC_MODE = 0,			/**< vtol is in multicopter mode */
+		TRANSITION_FRONT_P1,	/**< vtol is in front transition part 1 mode */
+		TRANSITION_FRONT_P2,	/**< vtol is in front transition part 2 mode */
+		FW_MODE,			    /**< vtol is in fixed wing mode */
+		TRANSITION_BACK_P1,     /**< vtol is in back transition mode */ //Part 1
+		TRANSITION_BACK_P2      //Part 2
+	};
+	struct {
+		vtol_mode flight_mode;	             /**< vtol flight mode, defined by enum vtol_mode */
+		hrt_abstime transition_angle_change; /**< absoulte time at which angle starts change */
+		float rotor_tilt_angle;
+	} _vtol_schedule;
 
 	uint64_t _start_rotor_speed;
 };
