@@ -59,7 +59,7 @@
 #include <drivers/drv_hrt.h>
 #include <uORB/topics/vehicle_local_position.h>
 #include <uORB/topics/vehicle_land_detected.h>
-#include <uORB/topics/v22_transition_status.h>
+#include <uORB/topics/v22_transition_status.h> //For V22
 
 /**
  * Multicopter attitude control app start / stop handling function
@@ -155,7 +155,7 @@ private:
 	orb_advert_t	_actuators_0_pub{nullptr};		/**< attitude actuator controls publication */
 	orb_advert_t	_actuators_1_pub{nullptr};
 	orb_advert_t	_controller_status_pub{nullptr};	/**< controller status publication */
-	orb_advert_t    _v22_transition_status_pub{nullptr};
+	orb_advert_t    _v22_transition_status_pub{nullptr}; //For V22
 
 	orb_id_t _rates_sp_id{nullptr};		/**< pointer to correct rates setpoint uORB metadata structure */
 	orb_id_t _actuators_id{nullptr};	/**< pointer to correct actuator controls0 uORB metadata structure */
@@ -176,9 +176,9 @@ private:
 	struct sensor_correction_s		_sensor_correction {};	/**< sensor thermal corrections */
 	struct sensor_bias_s			_sensor_bias {};	/**< sensor in-run bias corrections */
 
-	struct vehicle_local_position_s _vehicle_local_position {}; //需要订阅
+	struct vehicle_local_position_s _vehicle_local_position {}; //For V22: 需要订阅
 	struct vehicle_land_detected_s  _vehicle_land_detected {};
-	struct v22_transition_status_s  _v22_transition_status {}; //需要发布
+	struct v22_transition_status_s  _v22_transition_status {}; //For V22: 需要发布
 
 	MultirotorMixer::saturation_status _saturation_status{};
 
@@ -255,13 +255,13 @@ private:
 
 		(ParamFloat<px4::params::VT_WV_YAWR_SCL>) _vtol_wv_yaw_rate_scale,		/**< Scale value [0, 1] for yaw rate setpoint  */
 	
-		// For V22 -----------------------------------------------------------------------------
+		// For V22 rotor tilt angle ------------------------------------------------------------
 		(ParamFloat<px4::params::V22_TILT_L_HEL>) _v22_tilt_l_hel,
 		(ParamFloat<px4::params::V22_TILT_L_FIX>) _v22_tilt_l_fix,
 		(ParamFloat<px4::params::V22_TILT_R_HEL>) _v22_tilt_r_hel,
 		(ParamFloat<px4::params::V22_TILT_R_FIX>) _v22_tilt_r_fix,
 		(ParamFloat<px4::params::V22_FLAPS_SCL>) _v22_flaps_scl,
-		// -------------------------------------------------------------------------------------
+		// For V22 FW attitude rate control ----------------------------------------------------
 		(ParamFloat<px4::params::FW_ROLLRATE_P>) _fw_rollrate_p,
 		(ParamFloat<px4::params::FW_ROLLRATE_I>) _fw_rollrate_i,
 		(ParamFloat<px4::params::FW_ROLLRATE_D>) _fw_rollrate_d,
@@ -279,13 +279,14 @@ private:
 		(ParamFloat<px4::params::FW_YAWRATE_D>) _fw_yawrate_d,
 		(ParamFloat<px4::params::FW_YR_INT_LIM>) _fw_yr_int_lim,
 		(ParamFloat<px4::params::FW_YAWRATE_FF>) _fw_yawrate_ff,
-		// -------------------------------------------------------------------------------------
+		// For V22 mode transition -------------------------------------------------------------
 		(ParamFloat<px4::params::V22_TILT_MIDDLE>) _v22_tilt_middle,
 		(ParamFloat<px4::params::V22_TILT_END>) _v22_tilt_end,
 		(ParamFloat<px4::params::V22_KEY_SPEED>) _v22_key_speed,
 		(ParamFloat<px4::params::V22_SPEED_MC_M>) _v22_speed_mc_m,
 		(ParamFloat<px4::params::V22_SPEED_M_END>) _v22_speed_m_end,
 		(ParamFloat<px4::params::V22_SPEED_END_MC>) _v22_speed_end_mc
+		// -------------------------------------------------------------------------------------
 	)
 
 	matrix::Vector3f _attitude_p;		/**< P gain for attitude control */
@@ -299,13 +300,13 @@ private:
 	matrix::Vector3f _auto_rate_max;	/**< attitude rate limits in auto modes */
 	matrix::Vector3f _acro_rate_max;	/**< max attitude rates in acro mode */
 
-	// For V22 -----------------------------------------------------------------------------
+	// For V22 rotor tilt angle ------------------------------------------------------------
 	float _v22_tilt_l_hel_value;
 	float _v22_tilt_l_fix_value;
 	float _v22_tilt_r_hel_value;
 	float _v22_tilt_r_fix_value;
 	float _flaps_scale_value;
-	// -------------------------------------------------------------------------------------
+	// For V22 FW attitude rate control ----------------------------------------------------
 	matrix::Vector3f _fw_rate_p;
 	matrix::Vector3f _fw_rate_i;
 	matrix::Vector3f _fw_rate_d;
@@ -313,14 +314,13 @@ private:
 	matrix::Vector3f _fw_rate_ff;
 	matrix::Vector3f _att_control_fw; //固定翼飞机模式的虚拟控制量
 	matrix::Vector3f _rates_int_fw;
-	// -------------------------------------------------------------------------------------
+	// For V22 mode transition -------------------------------------------------------------
 	float _v22_tilt_middle_value;
 	float _v22_tilt_end_value;
 	float _v22_key_speed_value;
 	float _v22_speed_mc_m_value;
 	float _v22_speed_m_end_value;
 	float _v22_speed_end_mc_value;
-	// -------------------------------------------------------------------------------------
 	enum vtol_mode {
 		MC_MODE = 0,			/**< vtol is in multicopter mode */
 		TRANSITION_FRONT_P1,	/**< vtol is in front transition part 1 mode */
@@ -334,6 +334,7 @@ private:
 		hrt_abstime angle_start_change; /**< absoulte time at which angle starts change */
 		float rotor_tilt_angle;         // 0~90 deg
 	} _vtol_schedule;
+	// -------------------------------------------------------------------------------------
 
 	uint64_t _start_rotor_speed;
 };

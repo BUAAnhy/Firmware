@@ -590,8 +590,7 @@ PARAM_DEFINE_FLOAT(MC_DTERM_CUTOFF, 30.f);
  */
 PARAM_DEFINE_INT32(MC_AIRMODE, 0);
 
-/***************************************************************************************/
-// For V22 -----------------------------------------------------------------------------
+// For V22 rotor tilt angle ------------------------------------------------------------
 
 /**
  * Position of tilt servo 1 in helicopter mode (left)
@@ -648,7 +647,8 @@ PARAM_DEFINE_FLOAT(V22_TILT_R_FIX, 1.0f);
  */
 PARAM_DEFINE_FLOAT(V22_FLAPS_SCL, 1.0f);
 
-// For V22 FW attitude control ---------------------------------------------------------
+// For V22 FW attitude rate control ----------------------------------------------------
+// Roll --------------------------------------------------------------------------------
 
 /**
  * Roll rate P gain (V22 FW)
@@ -702,7 +702,7 @@ PARAM_DEFINE_FLOAT(FW_ROLLRATE_D, 0.0f);
  */
 PARAM_DEFINE_FLOAT(FW_ROLLRATE_FF, 0.0f);
 
-// -------------------------------------------------------------------------------------
+// Pitch -------------------------------------------------------------------------------
 
 /**
  * Pitch rate P gain (V22 FW)
@@ -756,7 +756,7 @@ PARAM_DEFINE_FLOAT(FW_PITCHRATE_D, 0.0f);
  */
 PARAM_DEFINE_FLOAT(FW_PITCHRATE_FF, 0.0f);
 
-// -------------------------------------------------------------------------------------
+// Yaw ---------------------------------------------------------------------------------
 
 /**
  * Yaw rate P gain (V22 FW)
@@ -810,7 +810,7 @@ PARAM_DEFINE_FLOAT(FW_YAWRATE_D, 0.0f);
  */
 PARAM_DEFINE_FLOAT(FW_YAWRATE_FF, 0.0f);
 
-// -------------------------------------------------------------------------------------
+// For V22 mode transition -------------------------------------------------------------
 
 /**
  * Position of tilt servo in middle of transition procedure
