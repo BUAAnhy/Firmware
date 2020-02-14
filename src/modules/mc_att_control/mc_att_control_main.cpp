@@ -1020,19 +1020,6 @@ MulticopterAttitudeControl::run()
 						}
 						break;
 				}
-				// 等价于
-				/*if(V_lon <= _v22_key_speed_value){
-					_rates_int_fw.zero();
-					_att_control_fw(0) = 0.0f;
-					_att_control_fw(1) = 0.0f;
-					_att_control_fw(2) = 0.0f;
-				}
-				if(_vtol_schedule.rotor_tilt_angle >= _v22_tilt_middle_value){
-					_rates_int.zero();
-					_att_control(0) = 0.0f;
-					_att_control(1) = 0.0f;
-					_att_control(2) = 0.0f;
-				}*/
 				_v22_transition_status.rotor_tilt_angle = _vtol_schedule.rotor_tilt_angle;
 				_v22_transition_status.GPS_lon_speed = V_lon;
 				_v22_transition_status.rotor_speed = (PX4_ISFINITE(_manual_control_sp.aux1) && 
